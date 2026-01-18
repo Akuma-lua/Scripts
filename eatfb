@@ -86,9 +86,6 @@ Tabs.Main:AddToggle("Transparent Tsunami", {Title = "Transparent tsunami", Defau
             obj:SetAttribute("Speed", 0)
         elseif obj.Name == "TsunamiWave" then
             obj.Transparency = 0.7
-        elseif obj.Name == "Hitbox" then
-            obj:Destroy()
-
         end
     end
     for _,v in ipairs(workspace.ActiveTsunamis:GetDescendants()) do

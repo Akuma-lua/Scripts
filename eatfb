@@ -9,23 +9,18 @@ local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
 local WindUI
 WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
--- Create Window
+-- // WINDOW SETUP // --
 local Window = WindUI:CreateWindow({
     Title = "We love tits",
     Author = "Enjoy",
     Folder = "TittyHubConfig",
-    Icon = "solar:star-bold",
+    Icon = "",
     Size = UDim2.fromOffset(580, 460),
     ToggleKey = Enum.KeyCode.K,
     OpenButton = { Enabled = true, Draggable = true }
 })
 
-local plr = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local hum = char:WaitForChild("Humanoid", 10)
-local hrp = char:WaitForChild("HumanoidRootPart", 10)
-
--- Tabs
+-- // TABS // --
 local MainTab = Window:Tab({ Title = "Main", Icon = "solar:home-bold" })
 local PlayerTab = Window:Tab({ Title = "Player", Icon = "solar:user-bold" })
 local SettingsTab = Window:Tab({ Title = "Settings", Icon = "solar:settings-bold" })
@@ -39,6 +34,11 @@ PlayerSection:Slider({
     Value = { Default = 16, Min = 0, Max = 999 },
     Callback = function(Value)
         player:SetAttribute("CurrentSpeed", tonumber(Value))
+        WindUI:Notify({
+            Title = "Walk Speed",
+            Content = "Speed set to: " .. tostring(Value),
+            Duration = 2.5
+        })
     end
 })
 
@@ -52,6 +52,34 @@ PlayerSection:Slider({
         if hum then
             hum.UseJumpPower = true
             hum.JumpPower = Value
+            WindUI:Notify({
+                Title = "Jump Power",
+                Content = "Jump power set to: " .. tostring(Value),
+                Duration = 2.5
+            })
+        end
+    end
+})
+
+PlayerSection:Slider({
+    Title = "Bat hitbox",
+    Step = 1,
+    Value = { Default = 2, Min = 2, Max = 100 },
+    Callback = function(Value)
+        local char = player.Character
+        local back = player.Backpack 
+        if back then
+        local bat = back:FindFirstChild("Basic Bat") or char:FindFirstChild("Basic Bat")
+        if bat then
+            bat.Hitbox.Size = Vector3.new(Value, Value, Value)
+            bat.Hitbox.Transparency = 0.2
+            bat.Hitbox.Color = Color3.fromRGB(255, 0, 0)
+        end
+            WindUI:Notify({
+                Title = "Bat hitbox",
+                Content = "Bat hitbox set to: " .. tostring(Value),
+                Duration = 2.5
+            })
         end
     end
 })
@@ -62,33 +90,53 @@ PlayerSection:Button({
 })
 
 local BoostSection = PlayerTab:Section({ Title = "Speed Boosts" })
-BoostSection:Button({ Title = "Get Double Speed", Callback = function() player:SetAttribute("HasDoubleSpeed", true) end })
-BoostSection:Button({ Title = "Get Speed Boost", Callback = function() player:SetAttribute("HasSpeedBoost", true) end })
-BoostSection:Button({ Title = "Get Super Speed Boost", Callback = function() player:SetAttribute("HasSuperSpeedBoost", true) end })
+
+BoostSection:Button({ 
+    Title = "Get Double Speed", 
+    Callback = function()
+        player:SetAttribute("HasDoubleSpeed", true)
+        WindUI:Notify({ Title = "Boost", Content = "Successfully got double speed", Duration = 2.5 })
+    end 
+})
+
+BoostSection:Button({ 
+    Title = "Get Speed Boost", 
+    Callback = function() 
+        player:SetAttribute("HasSpeedBoost", true)
+        WindUI:Notify({ Title = "Boost", Content = "Successfully got speed boost", Duration = 2.5 })
+    end 
+})
+
+BoostSection:Button({ 
+    Title = "Get Super Speed Boost", 
+    Callback = function() 
+        player:SetAttribute("HasSuperSpeedBoost", true) 
+        WindUI:Notify({ Title = "Boost", Content = "Successfully got super speed boost", Duration = 2.5 })
+    end 
+})
 
 -- // MAIN TAB SECTIONS // --
 local AutomationSection = MainTab:Section({ Title = "Automation" })
 
--- Transparent Tsunami
+local tsunamiConnection
 AutomationSection:Toggle({
     Title = "Transparent Tsunami",
     Value = false,
     Callback = function(state)
         local function apply(obj)
             if obj:IsA("Model") then obj:SetAttribute("Speed", 0)
-            elseif obj.Name == "TsunamiWave" then obj.Transparency = 0.7
-           end
+            elseif obj.Name == "TsunamiWave" then obj.Transparency = 0.7 end
         end
         if state then
             for _, v in ipairs(workspace.ActiveTsunamis:GetDescendants()) do apply(v) end
-            _G.TsunamiCon = workspace.ActiveTsunamis.DescendantAdded:Connect(apply)
-        elseif _G.TsunamiCon then
-            _G.TsunamiCon:Disconnect()
+            tsunamiConnection = workspace.ActiveTsunamis.DescendantAdded:Connect(apply)
+        elseif tsunamiConnection then
+            tsunamiConnection:Disconnect()
         end
+        WindUI:Notify({ Title = "Tsunami", Content = "Status: " .. tostring(state), Duration = 2.5 })
     end
 })
 
--- Instant Steal
 local brainrotConnection
 AutomationSection:Toggle({
     Title = "Instant Steal",
@@ -101,10 +149,10 @@ AutomationSection:Toggle({
         elseif brainrotConnection then
             brainrotConnection:Disconnect()
         end
+        WindUI:Notify({ Title = "Instant Steal", Content = "Status: " .. tostring(state), Duration = 2.5 })
     end
 })
 
--- Anti AFK
 local antiAfkRunning = false
 AutomationSection:Toggle({
     Title = "Anti AFK",
@@ -121,22 +169,24 @@ AutomationSection:Toggle({
                 end
             end)
         end
+        WindUI:Notify({ Title = "Anti AFK", Content = "Status: " .. tostring(state), Duration = 2.5 })
     end
 })
 
--- Auto Collect Money
 local moneyRunning = false
-local basesFolder = workspace:WaitForChild("Bases_NEW")
-local ownedBase = nil
-for _, base in ipairs(basesFolder:GetChildren()) do
-    if base:GetAttribute("Holder") == player.UserId then ownedBase = base break end
-end
-
 AutomationSection:Toggle({
     Title = "Auto Collect Money",
     Value = false,
     Callback = function(state)
         moneyRunning = state
+        WindUI:Notify({ Title = "Auto Collect", Content = "Status: " .. tostring(state), Duration = 2.5 })
+        
+        local basesFolder = workspace:WaitForChild("Bases_NEW")
+        local ownedBase = nil
+        for _, base in ipairs(basesFolder:GetChildren()) do
+            if base:GetAttribute("Holder") == player.UserId then ownedBase = base break end
+        end
+
         if state and ownedBase then
             task.spawn(function()
                 while moneyRunning do
@@ -157,19 +207,11 @@ AutomationSection:Toggle({
     end
 })
 
--- Radioactive/labels Section
+-- // RADIOACTIVE SECTION // --
 local RadioactiveSection = MainTab:Section({ Title = "Radioactive Events" })
 local radioRunning = false
 local eventFolder = workspace:FindFirstChild("EventParts")
-local radioactivetimetext = workspace:FindFirstChild("Model") and workspace.Model:GetChildren()[16].SurfaceGui.Frame.TextLabel2
-local celestialtimetext = workspace:FindFirstChild("Model") and workspace.Model:GetChildren()[16].SurfaceGui.Frame.TextLabel
-local celestialbrainrot = workspace.ActiveBrainrots.Celestial:FindFirstChildWhichIsA("Model")
-local celestialbrainrotname = nil
-if celestialbrainrot then
-    local celestialbrainrotname = celestialbrainrot.Name
-else
-    print("Nuh uh i still love tits")
-end
+local oldcframe = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
 
 RadioactiveSection:Toggle({
     Title = "Auto Collect Radioactive Coins",
@@ -193,80 +235,104 @@ RadioactiveSection:Toggle({
     end
 })
 
+local player = game.Players.LocalPlayer
+local obbyend = nil
+
+local function setObbyEnd(obj)
+    local found = obj:FindFirstChild("ObbyEnd")
+    if found then
+        obbyend = found
+    end
+end
+
+local radioactive = workspace.MapVariants:FindFirstChild("Radioactive")
+if radioactive then
+    setObbyEnd(radioactive)
+end
+
+workspace.MapVariants.DescendantAdded:Connect(function(obj)
+    if obj.Name == "Radioactive" then
+        setObbyEnd(obj)
+    end
+end)
+
+RadioactiveSection:Button({
+    Title = "Teleport to obby end",
+    Callback = function()
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not (hrp and obbyend) then return end
+
+        local oldcframe = hrp.CFrame
+
+        if obbyend:IsA("BasePart") then
+            hrp.CFrame = obbyend.CFrame
+        elseif obbyend:IsA("Model") then
+            hrp.CFrame = obbyend:GetPivot()
+        end
+
+        task.wait(0.15)
+        hrp.CFrame = oldcframe
+    end
+})
+
 -- // CHECKS SECTION // --
 local ChecksSection = MainTab:Section({ Title = "Checks" })
 
 ChecksSection:Button({
-    Title = "Check radioactive Time Left",
+    Title = "Check Radioactive Timer",
     Callback = function()
-        if radioactivetimetext then
-            WindUI:Notify({
-                Title = radioactivetimetext.Text,
-                Duration = 2.5
-            })
-        else
-            WindUI:Notify({ Title = "Error", Desc = "Timer text not found!", Duration = 2.5 })
-        end
+        local model = workspace:FindFirstChild("Model")
+        local children = model and model:GetChildren()
+        local timer = (children and #children >= 16 and children[16]:FindFirstChild("TextLabel2", true))
+        WindUI:Notify({ Title = "Radioactive Timer", Content = timer and timer.Text or "Not Found", Duration = 2.5 })
     end
 })
 
 ChecksSection:Button({
-    Title = "Check celestial Time Left",
+    Title = "Check Celestial Timer",
     Callback = function()
-        if radioactivetimetext then
-            WindUI:Notify({
-                Title = celestialtimetext.Text,
-                Duration = 2.5
-            })
-        else
-            WindUI:Notify({ Title = "Error", Desc = "Timer text not found!", Duration = 2.5 })
-        end
+        local model = workspace:FindFirstChild("Model")
+        local children = model and model:GetChildren()
+        local timer = (children and #children >= 16 and children[16]:FindFirstChild("TextLabel", true))
+        WindUI:Notify({ Title = "Celestial Timer", Content = timer and timer.Text or "Not Found", Duration = 2.5 })
     end
 })
 
-local function updateBrainrot()
-    local folder = workspace.ActiveBrainrots:FindFirstChild("Celestial")
-    local model = folder and folder:FindFirstChildWhichIsA("Model")
-    
-    if model then
-        celestialbrainrotname = model.Name
-    else
-        celestialbrainrotname = nil
-    end
-end
+local folder = workspace.ActiveBrainrots:FindFirstChild("Celestial")
+local bModel = folder and folder:FindFirstChildWhichIsA("Model")
 
 ChecksSection:Button({
-    Title = "Check celestial brainrot name",
+    Title = "Check Celestial Name",
     Callback = function()
-        updateBrainrot() 
+        if bModel then
+            local rbname = bModel:GetAttribute("BrainrotName") or "Unknown"
+            local bmut = bModel:GetAttribute("Mutation") or "Unknown"
+            local tleft = bModel:GetAttribute("TimeLeft") or "Unknown"
 
-        if celestialbrainrotname then
             WindUI:Notify({
-                Title = "Current Name:",
-                Content = celestialbrainrotname,
+                Title = "Brainrot Info",
+                Content = rbname .. ", " .. "Mutation: " .. bmut .. ", " .. "Time left: " .. tleft,
                 Duration = 2.5
             })
         else
-            WindUI:Notify({ 
-                Title = "Error", 
-                Content = "Model not found in Celestial!", 
-                Duration = 2.5 
+            WindUI:Notify({
+                Title = "Brainrot Info",
+                Content = "No brainrot found",
+                Duration = 2.5
             })
         end
     end
 })
 
-local SettingsSection = SettingsTab:Section({ Title = "UI" })
+-- // SETTINGS TAB SECTIONS // --
+local SettingsSection = SettingsTab:Section({ Title = "UI Settings" })
 
-        SettingsSection:Keybind({
-            Flag = "UI Keybind",
-            Title = "UI Keybind",
-            Desc = "Keybind to open ui",
-            Value = "G",
-            Callback = function(v)
-                Window:SetToggleKey(Enum.KeyCode[v])
-            end
-        })
+SettingsSection:Keybind({
+    Title = "Toggle Key",
+    Default = Enum.KeyCode.K,
+    Callback = function() Window:Toggle() end
+})
 
 SettingsSection:Dropdown({
     Title = "Change UI Theme",
@@ -284,4 +350,9 @@ SettingsSection:Slider({
     Callback = function(Value)
         Window:SetUIScale(Value)
     end
+})
+
+SettingsSection:Button({
+    Title = "Destroy Interface",
+    Callback = function() Window:Destroy() end
 })

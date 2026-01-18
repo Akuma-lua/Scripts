@@ -141,26 +141,6 @@ Tabs.Main:AddToggle("InstantStealToggle", {Title = "Instant steal", Default = fa
         end
     end
 end)
-
-        Tabs.Main:AddButton({
-        Title = "Get all coins",
-        Description = "",
-        Callback = function()
-        local player = game.Players.LocalPlayer
-        local char = player.Character or player.CharacterAdded:Wait()
-        local brainrot = workspace.EventParts
-
-for _, v in ipairs(brainrot:GetChildren()) do
-	if v:IsA("Model") then
-		v:PivotTo(char:GetPivot())
-	elseif v:IsA("BasePart") then
-		v.CFrame = char:GetPivot()
-	end
-end
-        end
-    })
-
-
 local Vim = game:GetService("VirtualInputManager")
 local antiAfkRunning = false
 local antiAfkThread
@@ -257,5 +237,34 @@ Tabs.Main:AddToggle("collect money", {
 		end)
 	else
 		thread = nil
+	end
+end)
+
+local radioactiverunning = false
+local radioactiveThread
+
+Tabs.Main:AddToggle("radioactivecoins", {
+	Title = "Auto collect radioactive coins",
+	Default = false
+}):OnChanged(function(state)
+	if state then
+		if radioactiverunning then return end
+		radioactiverunning = true
+
+		radioactiveThread = task.spawn(function()
+                    local player = game.Players.LocalPlayer
+        local char = player.Character or player.CharacterAdded:Wait()
+        local folder = workspace.EventParts
+
+for _, v in ipairs(folder:GetChildren()) do
+	if v:IsA("Model") then
+		v:PivotTo(char:GetPivot())
+	        elseif v:IsA("BasePart") then
+		            v.CFrame = char:GetPivot()
+	            end
+            end
+		end)
+	else
+        radioactiveThread = nil
 	end
 end)

@@ -1,0 +1,119 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Titty hub" .. Fluent.Version,
+    SubTitle = "Enjoy",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false,
+    Theme = "Amethyst",
+    MinimizeKey = Enum.KeyCode.K
+})
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Player = Window:AddTab({ Title = "Player", Icon = "" }),
+}
+
+Tabs.Player:AddSlider("WalkSpeedSlider", {
+    Title = "Walk speed",
+    Default = 16,
+    Min = 0,
+    Max = 225,
+    Rounding = 1,
+    Callback = function(Value)
+    local speed = tonumber(Value)
+        if speed then
+            game.Players.LocalPlayer:SetAttribute("CurrentSpeed", speed)
+        end
+    end
+})
+
+Tabs.Player:AddSlider("JumpPowerSlider", {
+    Title = "Jump Power",
+    Default = 50,
+    Min = 0,
+    Max = 300,
+    Rounding = 1,
+    Callback = function(Value)
+        local char = game.Players.LocalPlayer.Character
+        if char and char:FindFirstChildOfClass("Humanoid") then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            hum.UseJumpPower = true
+            hum.JumpPower = Value
+        end
+    end
+})
+
+    Tabs.Player:AddButton({
+        Title = "No view limit",
+        Description = "",
+        Callback = function()
+                 game.Players.LocalPlayer.CameraMaxZoomDistance = 500
+        end
+    })
+
+Tabs.Main:AddToggle("Transparent Tsunami", {Title = "Transparent tsunami", Default = false}):OnChanged(function(state)
+    if not state then return end
+    local function apply(obj)
+        if obj:IsA("Model") then
+            obj:SetAttribute("Speed", 0)
+        elseif obj.Name == "TsunamiWave" then
+            obj.Transparency = 0.7
+        elseif obj.Name == "Hitbox" then
+            obj:Destroy()
+
+        end
+    end
+    for _,v in ipairs(workspace.ActiveTsunamis:GetDescendants()) do
+        apply(v)
+    end
+
+    workspace.ActiveTsunamis.DescendantAdded:Connect(function(v)
+        apply(v)
+    end)
+end)
+
+    local function applyinstantsteal()
+    for _,v in ipairs(game.workspace.ActiveBrainrots:GetDescendants()) do
+        if v:IsA("ProximityPrompt") then
+            if v.HoldDuration == 0.5 then
+                v.HoldDuration = 0
+            end
+            v.HoldDuration = 0
+        end
+    end
+    game.workspace.ActiveBrainrots.DescendantAdded:Connect(function(v)
+        if v:IsA("ProximityPrompt") then
+            if v.HoldDuration == 0.5 then
+                v.HoldDuration = 0
+            end
+                v.HoldDuration = 0
+            end
+        end)
+    end 
+
+local brainrotConnection
+
+Tabs.Main:AddToggle("InstantStealToggle", {Title = "Instant steal", Default = false}):OnChanged(function(state)
+    if state then
+        applyinstantsteal()
+        brainrotConnection = workspace.ActiveBrainrots.DescendantAdded:Connect(function(v)
+            if v:IsA("ProximityPrompt") then
+                v.HoldDuration = 0
+            end
+        end)
+    else
+        if brainrotConnection then
+            brainrotConnection:Disconnect()
+        end
+
+        for _, v in ipairs(workspace.ActiveBrainrots:GetDescendants()) do
+            if v:IsA("ProximityPrompt") then
+                v.HoldDuration = 0.5
+            end
+        end
+    end
+end)

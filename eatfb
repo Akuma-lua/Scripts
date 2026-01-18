@@ -21,7 +21,7 @@ Tabs.Player:AddSlider("WalkSpeedSlider", {
     Title = "Walk speed",
     Default = 16,
     Min = 0,
-    Max = 225,
+    Max = 999,
     Rounding = 1,
     Callback = function(Value)
     local speed = tonumber(Value)
@@ -159,3 +159,103 @@ for _, v in ipairs(brainrot:GetChildren()) do
 end
         end
     })
+
+
+local Vim = game:GetService("VirtualInputManager")
+local antiAfkRunning = false
+local antiAfkThread
+local basesFolder = workspace:WaitForChild("Bases_NEW")
+
+Tabs.Main:AddToggle("Anti afk", {
+	Title = "Anti AFK",
+	Default = false
+}):OnChanged(function(state)
+	if state then
+		if antiAfkRunning then return end
+		antiAfkRunning = true
+
+		antiAfkThread = task.spawn(function()
+			while antiAfkRunning do
+				Vim:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+				task.wait(0.1)
+				Vim:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+				task.wait(600)
+			end
+		end)
+	else
+		antiAfkRunning = false
+	end
+end)
+
+local player = game.Players.LocalPlayer
+local ownedBase = nil
+
+for _, base in ipairs(basesFolder:GetChildren()) do
+	local holder = base:GetAttribute("Holder")
+	if holder and holder == player.UserId then
+		ownedBase = base
+		break
+	end
+end
+
+local player = game.Players.LocalPlayer
+local running = false
+local thread
+
+local player = game.Players.LocalPlayer
+local running = false
+local thread
+
+local function getAllCollects(base)
+	local collects = {}
+
+	for _, v in ipairs(base:GetDescendants()) do
+		if v.Name == "Collect" then
+			if v:IsA("BasePart") or v:IsA("Model") then
+				table.insert(collects, v)
+			end
+		end
+	end
+
+	return collects
+end
+
+Tabs.Main:AddToggle("collect money", {
+	Title = "Auto collect money",
+	Default = false
+}):OnChanged(function(state)
+	running = state
+
+	if state then
+		if thread then return end
+
+		thread = task.spawn(function()
+			while running do
+				local char = player.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				if not hrp or not ownedBase then
+					task.wait(0.2)
+					continue
+				end
+
+				local collects = getAllCollects(ownedBase)
+
+				for _, v in ipairs(collects) do
+					if not running then break end
+
+					if v:IsA("BasePart") then
+						hrp.CFrame = v.CFrame + Vector3.new(0, 7, 0)
+					elseif v:IsA("Model") then
+						hrp.CFrame = v:GetPivot() + Vector3.new(0, 7, 0)
+					end
+
+					task.wait(0.5)
+				end
+
+				task.wait(1)
+			end
+		end)
+	else
+		thread = nil
+	end
+end)

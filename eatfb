@@ -86,6 +86,9 @@ Tabs.Main:AddToggle("Transparent Tsunami", {Title = "Transparent tsunami", Defau
             obj:SetAttribute("Speed", 0)
         elseif obj.Name == "TsunamiWave" then
             obj.Transparency = 0.7
+        elseif obj.Name == "Hitbox" then
+            obj:Destroy()
+
         end
     end
     for _,v in ipairs(workspace.ActiveTsunamis:GetDescendants()) do
@@ -249,8 +252,7 @@ Tabs.Main:AddToggle("radioactivecoins", {
 		radioactiverunning = true
 
 		radioactiveThread = task.spawn(function()
-                    local player = game.Players.LocalPlayer
-        local char = player.Character or player.CharacterAdded:Wait()
+        local char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
         local folder = workspace.EventParts
 
 for _, v in ipairs(folder:GetChildren()) do
@@ -265,3 +267,12 @@ for _, v in ipairs(folder:GetChildren()) do
         radioactiveThread = nil
 	end
 end)
+
+
+        Tabs.Player:AddButton({
+        Title = "Check radioactive time",
+        Description = "",
+        Callback = function()
+        
+        end
+    })

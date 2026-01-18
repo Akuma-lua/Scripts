@@ -71,7 +71,7 @@ Tabs.Player:AddSlider("JumpPowerSlider", {
         end
     })
 
-                Tabs.Player:AddButton({
+        Tabs.Player:AddButton({
         Title = "Get speed boost",
         Description = "",
         Callback = function()
@@ -141,3 +141,21 @@ Tabs.Main:AddToggle("InstantStealToggle", {Title = "Instant steal", Default = fa
         end
     end
 end)
+
+        Tabs.Main:AddButton({
+        Title = "Get all coins",
+        Description = "",
+        Callback = function()
+        local player = game.Players.LocalPlayer
+        local char = player.Character or player.CharacterAdded:Wait()
+        local brainrot = workspace.EventParts
+
+for _, v in ipairs(brainrot:GetChildren()) do
+	if v:IsA("Model") then
+		v:PivotTo(char:GetPivot())
+	elseif v:IsA("BasePart") then
+		v.CFrame = char:GetPivot()
+	end
+end
+        end
+    })

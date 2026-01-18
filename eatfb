@@ -141,24 +141,3 @@ Tabs.Main:AddToggle("InstantStealToggle", {Title = "Instant steal", Default = fa
         end
     end
 end)
-
-Tabs.Main:AddToggle("InstantStealToggle", {Title = "Instant steal", Default = false}):OnChanged(function(state)
-    if state then
-        applyinstantsteal()
-        brainrotConnection = workspace.ActiveBrainrots.DescendantAdded:Connect(function(v)
-            if v:IsA("ProximityPrompt") then
-                v.HoldDuration = 0
-            end
-        end)
-    else
-        if brainrotConnection then
-            brainrotConnection:Disconnect()
-        end
-
-        for _, v in ipairs(workspace.ActiveBrainrots:GetDescendants()) do
-            if v:IsA("ProximityPrompt") then
-                v.HoldDuration = 0.5
-            end
-        end
-    end
-end)

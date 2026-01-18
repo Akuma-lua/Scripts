@@ -1,278 +1,287 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local RunService = game:GetService("RunService")
+local Vim = game:GetService("VirtualInputManager")
+local player = game.Players.LocalPlayer
+local TweenService = game:GetService('TweenService')
 
-local Window = Fluent:CreateWindow({
-    Title = "Titty hub  " .. Fluent.Version,
-    SubTitle = "Enjoy",
-    TabWidth = 160,
+local cloneref = (cloneref or clonereference or function(instance) return instance end)
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
+
+local WindUI
+WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+
+-- Create Window
+local Window = WindUI:CreateWindow({
+    Title = "We love tits",
+    Author = "Enjoy",
+    Folder = "TittyHubConfig",
+    Icon = "solar:star-bold",
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = false,
-    Theme = "Amethyst",
-    MinimizeKey = Enum.KeyCode.K
+    ToggleKey = Enum.KeyCode.K,
+    OpenButton = { Enabled = true, Draggable = true }
 })
 
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Player = Window:AddTab({ Title = "Player", Icon = "" }),
-}
+local plr = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid", 10)
+local hrp = char:WaitForChild("HumanoidRootPart", 10)
 
-Tabs.Player:AddSlider("WalkSpeedSlider", {
-    Title = "Walk speed",
-    Default = 16,
-    Min = 0,
-    Max = 999,
-    Rounding = 1,
+-- Tabs
+local MainTab = Window:Tab({ Title = "Main", Icon = "solar:home-bold" })
+local PlayerTab = Window:Tab({ Title = "Player", Icon = "solar:user-bold" })
+local SettingsTab = Window:Tab({ Title = "Settings", Icon = "solar:settings-bold" })
+
+-- // PLAYER TAB SECTIONS // --
+local PlayerSection = PlayerTab:Section({ Title = "Movement & View" })
+
+PlayerSection:Slider({
+    Title = "Walk Speed",
+    Step = 1,
+    Value = { Default = 16, Min = 0, Max = 999 },
     Callback = function(Value)
-    local speed = tonumber(Value)
-        if speed then
-            game.Players.LocalPlayer:SetAttribute("CurrentSpeed", speed)
-        end
+        player:SetAttribute("CurrentSpeed", tonumber(Value))
     end
 })
 
-Tabs.Player:AddSlider("JumpPowerSlider", {
+PlayerSection:Slider({
     Title = "Jump Power",
-    Default = 50,
-    Min = 0,
-    Max = 300,
-    Rounding = 1,
+    Step = 1,
+    Value = { Default = 50, Min = 0, Max = 300 },
     Callback = function(Value)
-        local char = game.Players.LocalPlayer.Character
-        if char and char:FindFirstChildOfClass("Humanoid") then
-            local hum = char:FindFirstChildOfClass("Humanoid")
+        local char = player.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
             hum.UseJumpPower = true
             hum.JumpPower = Value
         end
     end
 })
 
-    Tabs.Player:AddButton({
-        Title = "No view limit",
-        Description = "",
-        Callback = function()
-                 game.Players.LocalPlayer.CameraMaxZoomDistance = 999999
+PlayerSection:Button({
+    Title = "No View Limit",
+    Callback = function() player.CameraMaxZoomDistance = 999999 end
+})
+
+local BoostSection = PlayerTab:Section({ Title = "Speed Boosts" })
+BoostSection:Button({ Title = "Get Double Speed", Callback = function() player:SetAttribute("HasDoubleSpeed", true) end })
+BoostSection:Button({ Title = "Get Speed Boost", Callback = function() player:SetAttribute("HasSpeedBoost", true) end })
+BoostSection:Button({ Title = "Get Super Speed Boost", Callback = function() player:SetAttribute("HasSuperSpeedBoost", true) end })
+
+-- // MAIN TAB SECTIONS // --
+local AutomationSection = MainTab:Section({ Title = "Automation" })
+
+-- Transparent Tsunami
+AutomationSection:Toggle({
+    Title = "Transparent Tsunami",
+    Value = false,
+    Callback = function(state)
+        local function apply(obj)
+            if obj:IsA("Model") then obj:SetAttribute("Speed", 0)
+            elseif obj.Name == "TsunamiWave" then obj.Transparency = 0.7
+           end
         end
-    })
-
-        Tabs.Player:AddButton({
-        Title = "Get double speed",
-        Description = "",
-        Callback = function()
-                 game.Players.LocalPlayer:SetAttribute("HasDoubleSpeed", true)
-        end
-    })
-
-        Tabs.Player:AddButton({
-        Title = "Get speed boost",
-        Description = "",
-        Callback = function()
-                 game.Players.LocalPlayer:SetAttribute("HasSpeedBoost", true)
-        end
-    })
-
-        Tabs.Player:AddButton({
-        Title = "Get super speed boost",
-        Description = "",
-        Callback = function()
-                 game.Players.LocalPlayer:SetAttribute("HasSuperSpeedBoost", true)
-        end
-    })
-
-Tabs.Main:AddToggle("Transparent Tsunami", {Title = "Transparent tsunami", Default = false}):OnChanged(function(state)
-    if not state then return end
-    local function apply(obj)
-        if obj:IsA("Model") then
-            obj:SetAttribute("Speed", 0)
-        elseif obj.Name == "TsunamiWave" then
-            obj.Transparency = 0.7
-        elseif obj.Name == "Hitbox" then
-            obj:Destroy()
-
+        if state then
+            for _, v in ipairs(workspace.ActiveTsunamis:GetDescendants()) do apply(v) end
+            _G.TsunamiCon = workspace.ActiveTsunamis.DescendantAdded:Connect(apply)
+        elseif _G.TsunamiCon then
+            _G.TsunamiCon:Disconnect()
         end
     end
-    for _,v in ipairs(workspace.ActiveTsunamis:GetDescendants()) do
-        apply(v)
-    end
+})
 
-    workspace.ActiveTsunamis.DescendantAdded:Connect(function(v)
-        apply(v)
-    end)
-end)
-
-    local function applyinstantsteal()
-    for _,v in ipairs(game.workspace.ActiveBrainrots:GetDescendants()) do
-        if v:IsA("ProximityPrompt") then
-            if v.HoldDuration == 0.5 then
-                v.HoldDuration = 0
-            end
-            v.HoldDuration = 0
-        end
-    end
-    game.workspace.ActiveBrainrots.DescendantAdded:Connect(function(v)
-        if v:IsA("ProximityPrompt") then
-            if v.HoldDuration == 0.5 then
-                v.HoldDuration = 0
-            end
-                v.HoldDuration = 0
-            end
-        end)
-    end 
-
+-- Instant Steal
 local brainrotConnection
-
-Tabs.Main:AddToggle("InstantStealToggle", {Title = "Instant steal", Default = false}):OnChanged(function(state)
-    if state then
-        applyinstantsteal()
-        brainrotConnection = workspace.ActiveBrainrots.DescendantAdded:Connect(function(v)
-            if v:IsA("ProximityPrompt") then
-                v.HoldDuration = 0
-            end
-        end)
-    else
-        if brainrotConnection then
+AutomationSection:Toggle({
+    Title = "Instant Steal",
+    Value = false,
+    Callback = function(state)
+        local function fix(v) if v:IsA("ProximityPrompt") then v.HoldDuration = 0 end end
+        if state then
+            for _, v in ipairs(workspace.ActiveBrainrots:GetDescendants()) do fix(v) end
+            brainrotConnection = workspace.ActiveBrainrots.DescendantAdded:Connect(fix)
+        elseif brainrotConnection then
             brainrotConnection:Disconnect()
         end
+    end
+})
 
-        for _, v in ipairs(workspace.ActiveBrainrots:GetDescendants()) do
-            if v:IsA("ProximityPrompt") then
-                v.HoldDuration = 0.5
-            end
+-- Anti AFK
+local antiAfkRunning = false
+AutomationSection:Toggle({
+    Title = "Anti AFK",
+    Value = false,
+    Callback = function(state)
+        antiAfkRunning = state
+        if state then
+            task.spawn(function()
+                while antiAfkRunning do
+                    Vim:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+                    task.wait(0.1)
+                    Vim:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+                    task.wait(600)
+                end
+            end)
         end
     end
-end)
-local Vim = game:GetService("VirtualInputManager")
-local antiAfkRunning = false
-local antiAfkThread
+})
+
+-- Auto Collect Money
+local moneyRunning = false
 local basesFolder = workspace:WaitForChild("Bases_NEW")
-
-Tabs.Main:AddToggle("Anti afk", {
-	Title = "Anti AFK",
-	Default = false
-}):OnChanged(function(state)
-	if state then
-		if antiAfkRunning then return end
-		antiAfkRunning = true
-
-		antiAfkThread = task.spawn(function()
-			while antiAfkRunning do
-				Vim:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-				task.wait(0.1)
-				Vim:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
-				task.wait(600)
-			end
-		end)
-	else
-		antiAfkRunning = false
-	end
-end)
-
-local player = game.Players.LocalPlayer
 local ownedBase = nil
-
 for _, base in ipairs(basesFolder:GetChildren()) do
-	local holder = base:GetAttribute("Holder")
-	if holder and holder == player.UserId then
-		ownedBase = base
-		break
-	end
+    if base:GetAttribute("Holder") == player.UserId then ownedBase = base break end
 end
 
-local player = game.Players.LocalPlayer
-local running = false
-local thread
-
-local player = game.Players.LocalPlayer
-local running = false
-local thread
-
-local function getAllCollects(base)
-	local collects = {}
-
-	for _, v in ipairs(base:GetDescendants()) do
-		if v.Name == "Collect" then
-			if v:IsA("BasePart") or v:IsA("Model") then
-				table.insert(collects, v)
-			end
-		end
-	end
-
-	return collects
-end
-
-Tabs.Main:AddToggle("collect money", {
-	Title = "Auto collect money",
-	Default = false
-}):OnChanged(function(state)
-	running = state
-
-	if state then
-		if thread then return end
-
-		thread = task.spawn(function()
-			while running do
-				local char = player.Character
-				local hrp = char and char:FindFirstChild("HumanoidRootPart")
-				if not hrp or not ownedBase then
-					task.wait(0.2)
-					continue
-				end
-
-				local collects = getAllCollects(ownedBase)
-
-				for _, v in ipairs(collects) do
-					if not running then break end
-
-					if v:IsA("BasePart") then
-						hrp.CFrame = v.CFrame + Vector3.new(0, 7, 0)
-					elseif v:IsA("Model") then
-						hrp.CFrame = v:GetPivot() + Vector3.new(0, 7, 0)
-					end
-
-					task.wait(0.5)
-				end
-
-				task.wait(1)
-			end
-		end)
-	else
-		thread = nil
-	end
-end)
-
-local radioactiverunning = false
-local radioactiveThread
-
-Tabs.Main:AddToggle("radioactivecoins", {
-	Title = "Auto collect radioactive coins",
-	Default = false
-}):OnChanged(function(state)
-	if state then
-		if radioactiverunning then return end
-		radioactiverunning = true
-
-		radioactiveThread = task.spawn(function()
-        local char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
-        local folder = workspace.EventParts
-
-for _, v in ipairs(folder:GetChildren()) do
-	if v:IsA("Model") then
-		v:PivotTo(char:GetPivot())
-	        elseif v:IsA("BasePart") then
-		            v.CFrame = char:GetPivot()
-	            end
-            end
-		end)
-	else
-        radioactiveThread = nil
-	end
-end)
-
-
-        Tabs.Player:AddButton({
-        Title = "Check radioactive time",
-        Description = "",
-        Callback = function()
-        
+AutomationSection:Toggle({
+    Title = "Auto Collect Money",
+    Value = false,
+    Callback = function(state)
+        moneyRunning = state
+        if state and ownedBase then
+            task.spawn(function()
+                while moneyRunning do
+                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        for _, v in ipairs(ownedBase:GetDescendants()) do
+                            if not moneyRunning then break end
+                            if v.Name == "Collect" and (v:IsA("BasePart") or v:IsA("Model")) then
+                                hrp.CFrame = (v:IsA("Model") and v:GetPivot() or v.CFrame) + Vector3.new(0, 7, 0)
+                                task.wait(0.5)
+                            end
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
         end
-    })
+    end
+})
+
+-- Radioactive/labels Section
+local RadioactiveSection = MainTab:Section({ Title = "Radioactive Events" })
+local radioRunning = false
+local eventFolder = workspace:FindFirstChild("EventParts")
+local radioactivetimetext = workspace:FindFirstChild("Model") and workspace.Model:GetChildren()[16].SurfaceGui.Frame.TextLabel2
+local celestialtimetext = workspace:FindFirstChild("Model") and workspace.Model:GetChildren()[16].SurfaceGui.Frame.TextLabel
+local celestialbrainrot = workspace.ActiveBrainrots.Celestial:FindFirstChildWhichIsA("Model")
+local celestialbrainrotname = nil
+if celestialbrainrot then
+    local celestialbrainrotname = celestialbrainrot.Name
+else
+    print("Nuh uh i still love tits")
+end
+
+RadioactiveSection:Toggle({
+    Title = "Auto Collect Radioactive Coins",
+    Value = false,
+    Callback = function(state)
+        radioRunning = state
+        if state and eventFolder then
+            task.spawn(function()
+                local function collect(v)
+                    if not radioRunning then return end
+                    local char = player.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        if v:IsA("Model") then v:PivotTo(char:GetPivot())
+                        elseif v:IsA("BasePart") then v.CanCollide = false v.CFrame = char:GetPivot() end
+                    end
+                end
+                for _, v in ipairs(eventFolder:GetChildren()) do collect(v) end
+                eventFolder.DescendantAdded:Connect(collect)
+            end)
+        end
+    end
+})
+
+-- // CHECKS SECTION // --
+local ChecksSection = MainTab:Section({ Title = "Checks" })
+
+ChecksSection:Button({
+    Title = "Check radioactive Time Left",
+    Callback = function()
+        if radioactivetimetext then
+            WindUI:Notify({
+                Title = radioactivetimetext.Text,
+                Duration = 2.5
+            })
+        else
+            WindUI:Notify({ Title = "Error", Desc = "Timer text not found!", Duration = 2.5 })
+        end
+    end
+})
+
+ChecksSection:Button({
+    Title = "Check celestial Time Left",
+    Callback = function()
+        if radioactivetimetext then
+            WindUI:Notify({
+                Title = celestialtimetext.Text,
+                Duration = 2.5
+            })
+        else
+            WindUI:Notify({ Title = "Error", Desc = "Timer text not found!", Duration = 2.5 })
+        end
+    end
+})
+
+local function updateBrainrot()
+    local folder = workspace.ActiveBrainrots:FindFirstChild("Celestial")
+    local model = folder and folder:FindFirstChildWhichIsA("Model")
+    
+    if model then
+        celestialbrainrotname = model.Name
+    else
+        celestialbrainrotname = nil
+    end
+end
+
+ChecksSection:Button({
+    Title = "Check celestial brainrot name",
+    Callback = function()
+        updateBrainrot() 
+
+        if celestialbrainrotname then
+            WindUI:Notify({
+                Title = "Current Name:",
+                Content = celestialbrainrotname,
+                Duration = 2.5
+            })
+        else
+            WindUI:Notify({ 
+                Title = "Error", 
+                Content = "Model not found in Celestial!", 
+                Duration = 2.5 
+            })
+        end
+    end
+})
+
+local SettingsSection = SettingsTab:Section({ Title = "UI" })
+
+        SettingsSection:Keybind({
+            Flag = "UI Keybind",
+            Title = "UI Keybind",
+            Desc = "Keybind to open ui",
+            Value = "G",
+            Callback = function(v)
+                Window:SetToggleKey(Enum.KeyCode[v])
+            end
+        })
+
+SettingsSection:Dropdown({
+    Title = "Change UI Theme",
+    Values = {"Dark", "Light", "Rose"},
+    Value = "Dark",
+    Callback = function(Selected)
+        WindUI:SetTheme(Selected)
+    end
+})
+
+SettingsSection:Slider({
+    Title = "UI Scale",
+    Step = 0.1,
+    Value = { Default = 1, Min = 0.5, Max = 1.5 },
+    Callback = function(Value)
+        Window:SetUIScale(Value)
+    end
+})

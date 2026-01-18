@@ -3,7 +3,7 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Titty hub" .. Fluent.Version,
+    Title = "Titty hub  " .. Fluent.Version,
     SubTitle = "Enjoy",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
@@ -51,7 +51,31 @@ Tabs.Player:AddSlider("JumpPowerSlider", {
         Title = "No view limit",
         Description = "",
         Callback = function()
-                 game.Players.LocalPlayer.CameraMaxZoomDistance = 500
+                 game.Players.LocalPlayer.CameraMaxZoomDistance = 999999
+        end
+    })
+
+        Tabs.Player:AddButton({
+        Title = "Get double speed",
+        Description = "",
+        Callback = function()
+                 game.Players.LocalPlayer:SetAttribute("HasDoubleSpeed", true)
+        end
+    })
+
+        Tabs.Player:AddButton({
+        Title = "Get speed boost",
+        Description = "",
+        Callback = function()
+                 game.Players.LocalPlayer:SetAttribute("HasSpeedBoost", true)
+        end
+    })
+
+                Tabs.Player:AddButton({
+        Title = "Get speed boost",
+        Description = "",
+        Callback = function()
+                 game.Players.LocalPlayer:SetAttribute("HasSuperSpeedBoost", true)
         end
     })
 
@@ -96,6 +120,27 @@ end)
     end 
 
 local brainrotConnection
+
+Tabs.Main:AddToggle("InstantStealToggle", {Title = "Instant steal", Default = false}):OnChanged(function(state)
+    if state then
+        applyinstantsteal()
+        brainrotConnection = workspace.ActiveBrainrots.DescendantAdded:Connect(function(v)
+            if v:IsA("ProximityPrompt") then
+                v.HoldDuration = 0
+            end
+        end)
+    else
+        if brainrotConnection then
+            brainrotConnection:Disconnect()
+        end
+
+        for _, v in ipairs(workspace.ActiveBrainrots:GetDescendants()) do
+            if v:IsA("ProximityPrompt") then
+                v.HoldDuration = 0.5
+            end
+        end
+    end
+end)
 
 Tabs.Main:AddToggle("InstantStealToggle", {Title = "Instant steal", Default = false}):OnChanged(function(state)
     if state then

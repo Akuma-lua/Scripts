@@ -72,7 +72,7 @@ Tabs.Player:AddSlider("JumpPowerSlider", {
     })
 
         Tabs.Player:AddButton({
-        Title = "Get speed boost",
+        Title = "Get super speed boost",
         Description = "",
         Callback = function()
                  game.Players.LocalPlayer:SetAttribute("HasSuperSpeedBoost", true)

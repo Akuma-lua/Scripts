@@ -301,15 +301,14 @@ ChecksSection:Button({
 
 local folder = workspace.ActiveBrainrots:FindFirstChild("Celestial")
 local bModel = folder and folder:FindFirstChildWhichIsA("Model")
+local rbname = bModel:GetAttribute("BrainrotName") or "Unknown"
+local bmut = bModel:GetAttribute("Mutation") or "Unknown"
+local tleft = bModel:GetAttribute("TimeLeft") or "Unknown"
 
 ChecksSection:Button({
     Title = "Check Celestial Name",
     Callback = function()
         if bModel then
-            local rbname = bModel:GetAttribute("BrainrotName") or "Unknown"
-            local bmut = bModel:GetAttribute("Mutation") or "Unknown"
-            local tleft = bModel:GetAttribute("TimeLeft") or "Unknown"
-
             WindUI:Notify({
                 Title = "Brainrot Info",
                 Content = rbname .. ", " .. "Mutation: " .. bmut .. ", " .. "Time left: " .. tleft,

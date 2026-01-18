@@ -299,28 +299,30 @@ ChecksSection:Button({
     end
 })
 
-local folder = workspace.ActiveBrainrots:FindFirstChild("Celestial")
-local bModel = folder and folder:FindFirstChildWhichIsA("Model")
-local rbname = bModel:GetAttribute("BrainrotName") or "Unknown"
-local bmut = bModel:GetAttribute("Mutation") or "Unknown"
-local tleft = bModel:GetAttribute("TimeLeft") or "Unknown"
-
 ChecksSection:Button({
     Title = "Check Celestial Name",
     Callback = function()
-        if bModel then
-            WindUI:Notify({
-                Title = "Brainrot Info",
-                Content = rbname .. ", " .. "Mutation: " .. bmut .. ", " .. "Time left: " .. tleft,
-                Duration = 2.5
-            })
-        else
+        local folder = workspace.ActiveBrainrots:FindFirstChild("Celestial")
+        local bModel = folder and folder:FindFirstChildWhichIsA("Model")
+
+        if not bModel then
             WindUI:Notify({
                 Title = "Brainrot Info",
                 Content = "No brainrot found",
                 Duration = 2.5
             })
+            return
         end
+
+        local rbname = bModel:GetAttribute("BrainrotName") or "Unknown"
+        local bmut = bModel:GetAttribute("Mutation") or "None"
+        local tleft = bModel:GetAttribute("TimeLeft") or "N/A"
+
+        WindUI:Notify({
+            Title = "Brainrot Info",
+            Content = rbname .. ", Mutation: " .. bmut .. ", Time left: " .. tleft,
+            Duration = 2.5
+        })
     end
 })
 

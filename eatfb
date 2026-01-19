@@ -24,6 +24,7 @@ local Window = WindUI:CreateWindow({
 local MainTab = Window:Tab({ Title = "Main", Icon = "solar:home-bold" })
 local PlayerTab = Window:Tab({ Title = "Player", Icon = "solar:user-bold" })
 local SettingsTab = Window:Tab({ Title = "Settings", Icon = "solar:settings-bold" })
+local DiscordTab = Window:Tab({ Title = "Discord", Icon = "solar:share-bold" })
 
 -- // PLAYER TAB SECTIONS // --
 local PlayerSection = PlayerTab:Section({ Title = "Movement & View" })
@@ -344,7 +345,6 @@ SettingsSection:Keybind({
     Title = "Toggle Key",
     Default = Enum.KeyCode.K,
     Callback = function() Window:Toggle() end
-    SettingsSection. Slider
 })
 
 SettingsSection:Dropdown({
@@ -369,3 +369,89 @@ SettingsSection:Button({
     Title = "Destroy Interface",
     Callback = function() Window:Destroy() end
 })
+
+do
+    local RunService = game:GetService("RunService")
+    local HttpService = game:GetService("HttpService")
+
+    local InviteCode = "k7H4bwFzVs"
+    local DiscordAPI = "https://discord.com/api/v10/invites/" .. InviteCode .. "?with_counts=true&with_expiration=true"
+
+    local Response
+    if WindUI.Creator.Request then
+        local success, res = pcall(function()
+            return WindUI.Creator.Request({
+                Url = DiscordAPI,
+                Method = "GET",
+                Headers = {
+                    ["User-Agent"] = "WindUI/Example",
+                    ["Accept"] = "application/json"
+                }
+            })
+        end)
+
+        if success and res and res.Body then
+            Response = HttpService:JSONDecode(res.Body)
+        end
+    end
+
+    if Response and Response.guild then
+        DiscordTab:Section({
+            Title = "Join our Discord server!",
+            TextSize = 20,
+        })
+
+        DiscordTab:Paragraph({
+            Title = Response.guild.name or "Unknown Server",
+            Desc = Response.guild.description or "Welcome to titty hub!",
+            Image = Response.guild.icon and
+                ("https://cdn.discordapp.com/icons/" .. Response.guild.id .. "/" .. Response.guild.icon .. ".png?size=1024")
+                or nil,
+            ImageSize = 48,
+            Buttons = {
+                {
+                    Title = "Copy link",
+                    Icon = "link",
+                    Callback = function()
+                        if setclipboard then
+                            setclipboard("https://discord.gg/" .. InviteCode)
+                        end
+                    end
+                }
+            }
+        })
+
+    elseif RunService:IsStudio() then
+        DiscordTab:Paragraph({
+            Title = "Discord API is not available in Studio mode.",
+            TextSize = 20,
+            Justify = "Center",
+            Image = "solar:info-circle-bold",
+            Color = "Red",
+            Buttons = {
+                {
+                    Title = "Get/Copy Invite Link",
+                    Icon = "link",
+                    Callback = function()
+                        if setclipboard then
+                            setclipboard("https://discord.gg/" .. InviteCode)
+                        else
+                            WindUI:Notify({
+                                Title = "Discord Invite Link",
+                                Content = "https://discord.gg/" .. InviteCode,
+                            })
+                        end
+                    end
+                }
+            }
+        })
+    else
+        DiscordTab:Paragraph({
+            Title = "Failed to fetch Discord server info.",
+            TextSize = 20,
+            Justify = "Center",
+            Image = "solar:info-circle-bold",
+            Color = "Red",
+        })
+    end
+end

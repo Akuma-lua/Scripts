@@ -12,7 +12,7 @@ WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/W
 -- // WINDOW SETUP // --
 local Window = WindUI:CreateWindow({
     Title = "We love tits",
-    Author = "Enjoy",
+    Author = "Escape tsunami for brainrots!",
     Folder = "TittyHubConfig",
     Icon = "",
     Size = UDim2.fromOffset(580, 460),
